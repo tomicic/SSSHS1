@@ -22,7 +22,7 @@ allConsumption = []
 allProduction = []
 lowestCRLstorages = []
 
-### STATISTICAL DATA AHEAD ###
+### STATISTICS ###
 
 Overflow = 0
 totalInterventions = 0 # Total number of system interventions. If the number is "fairly big", the system needs architectural changes.
@@ -38,7 +38,7 @@ UTalerts = 0 # upper threshold alerts
 LTalerts = 0 # lower threshold alerts
 
 
-###### FUNCTION WHICH RUNS THE SIMULATION ######
+###### SIMULATION CONTROL FUNCTION ###### 
 
 def startSimulation():
 
