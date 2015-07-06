@@ -22,7 +22,7 @@ cunsumer4 = agent ("Person4-U1", 10, consumptionDistribution1, 1, 30, storages[0
 cunsumer5 = agent ("Person5-U1", 9, consumptionDistribution1, 1, 30, storages[0], 0.6)
 cunsumer6 = agent ("Person6-U1", 9, consumptionDistribution1, 1, 30, storages[0], 0.6)
 
- # irrigation in the dry days, 10 l/m2, garden 50 m2 => 500 l
+ # irrigation in the dry days, 10 l/m2, garden 50 m2 => 500 l 
 consumptionDistribution2 = [0,0,0,0,0,0,0,0,0,-500,0,-500,0,0,0,0,-500,0,0,0,0,-500,0,0,0,0,0,0,0,0]
 cunsumer7 = agent ("IRRIGATION-U1", 2, consumptionDistribution2, 1, 30, storages[0], 0.2)
 
