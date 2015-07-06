@@ -25,7 +25,7 @@ lowestCRLstorages = []
 ### STATISTICS ###
 
 Overflow = 0
-totalInterventions = 0 # Total number of system interventions. If the number is "fairly big", the system needs architectural changes.
+totalInterventions = 0 # Total number of system interventions.
 firstIntervention = 0 # Time unit in which the first system intervention happened.
 interventionTimes = [] # a list of time units in which interventions happened
 economyRequests = 0 # A total number of economy requests
@@ -139,8 +139,8 @@ class observerAgent:
             print(" ---- My total consumption: %f" %total_consumption)
             #print(" ---- My agent codes: %s" %s.myAgents)
             #print(" ---- My agents: %s" %s.myAgentNames)
-            print(" ---- My PRODUCERS: %s" %s.myProducers) # ...TO-DO
-            print(" ---- My CONSUMERS: %s" %s.myConsumers) # ...TO-DO
+            print(" ---- My PRODUCERS: %s" %s.myProducers) 
+            print(" ---- My CONSUMERS: %s" %s.myConsumers) 
             print(" ---- My agents working in economy mode: %s " %s.agentsInEconomy)
 
 
@@ -169,7 +169,7 @@ class agent:
         self.delayPossible = "YES"
         self.maxDelay = 6
         self.currentDelay = 0
-        self.worked = "NO" # if YES -> this agent has already worked in the current time unit; otherwise NO
+        self.worked = "NO"
 
         if sum(self.capacity) < 0:
             self.type = "CONSUMER"
@@ -189,7 +189,7 @@ class agent:
            
             print (" ------ MY STORAGE: %s" %myStorage.name)
 
-            if isinstance(self.capacity,list) == True: # temporary if/else, now the inputs are all in lists
+            if isinstance(self.capacity,list) == True:
                 myStorage.currentResourceLevel += self.capacity[timer-1]
                 print (" ------ MY CAPACITY: %f" %self.capacity[timer-1])
             else:
@@ -205,7 +205,7 @@ class agent:
 
 
 
-    def changeMode (self, lowConsumer): # changing the mode to the ECONOMY mode
+    def changeMode (self, lowConsumer):
 
         print ("\n FUNCTION: changeMode\n")
         myStorage = agentStorage.get(self)
@@ -234,9 +234,9 @@ class agent:
            return "ok"
 
 
-    def advance (self, lowConsumer): # funkcija za prijevremeno izvrsavanje rada potrosaca
+    def advance (self, lowConsumer): 
 
-        #self.advanceTime = advanceTime # Implement this LATER. For now, we are assuming that the new starting hour will be NOW (workStart=timer )
+        #self.advanceTime = advanceTime 
 
         if self.advancePossible == "NO":
             print ("Time advance operation not possible for agent %s. Sorry." %lowConsumer)
@@ -336,7 +336,6 @@ class StorageAgent:
         for a in self.myAgents:
             a.working(timer)
             #print ("debugging info: calling working function of agent %s" %a)
-            # TO CALL THRESHOLD ALERT AFTER EVERY CHANGE, OR ONLY AT THE END OF THE TIME UNIT?
             #self.thresholdAlert
         self.thresholdAlert
 
@@ -352,7 +351,7 @@ class StorageAgent:
         return totalReqs
 
 
-    def tomorrowRequests(self): # THIS IS WORK IN PROGRESS for future versions
+    def tomorrowRequests(self): 
 
         tomorrowReqs = 0
 
@@ -374,7 +373,7 @@ class StorageAgent:
         return totalProduction
 
 
-    def tomorrowProduction(self):  # THIS IS WORK IN PROGRESS for future versions
+    def tomorrowProduction(self): 
 
         tomorrowProducs = 0
 
@@ -558,7 +557,7 @@ class StorageAgent:
         totalRequests = self.tomorrowRequests() # if some consumer responded with "OK", calculate if the new total values are still beneath the threshold
         totalProduction = self.tomorrowProduction()
 
-        #if (totalProduction - totalRequests + self.currentResourceLevel) > self.lowerThreshold: # KITA. SAD PAK NE GLEDA kaj se desava danas, nego samo sutra, pa recimo iako nitko ne moze od potrosaca u economy, on prijavljuje SUCCESS.
+        #if (totalProduction - totalRequests + self.currentResourceLevel) > self.lowerThreshold: 
         if self.currentResourceLevel > self.lowerThreshold:
             print ("\n ** NICE! Economy mode SAVED the day for the next time unit! ** ")
             return ("ok")
