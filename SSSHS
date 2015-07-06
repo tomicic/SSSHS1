@@ -568,7 +568,7 @@ class StorageAgent:
             self.currentOperatingMode = "economy"
 
             # neededResources = self.lowerThreshold - self.currentResourceLevel + totalRequests + 1
-            # neededResources = self.lowerThreshold - (self.currentResourceLevel+totalProduction-totalRequests) + 1 # trazi onoliko koliko ce trebati u SLJEDECOJ vremenskoj jedinici
+            # neededResources = self.lowerThreshold - (self.currentResourceLevel+totalProduction-totalRequests) + 1 
             neededResources = self.lowerThreshold - self.currentResourceLevel + 1
 
             print (" ** %s asking for neighbour help, needed amount: %f \n \n" %(self.name, neededResources))
@@ -606,11 +606,11 @@ class StorageAgent:
 
 
         friend = i
-        totalRequests = abs(self.currentReqs()) # ponovno izracunavanje ukupnih zahtjeva - sada se potrosac "friend" dodaje zbroju jer mu se radno vrijeme pomaknulo unaprijed
+        totalRequests = abs(self.currentReqs()) 
         totalProduction = self.currentProduction()
 
         #if (self.currentResourceLevel + productionCapacity - totalRequests) < self.upperThreshold:
-        if (totalProduction - totalRequests) <= 0: # mozda je dovoljno da trend bude negativan ili neutralan (0), mozda i ne - pratiti simulacije
+        if (totalProduction - totalRequests) <= 0: 
             print (" ** RESOURCE LOSS PREVENTED BY ADVANCING! ** \n")
             return ("ok")
 
@@ -639,14 +639,14 @@ class StorageAgent:
         while answer == 0 and i != len(self.agentsByPriority):
 
             lowConsumer = self.agentsByPriority[i]
-            answer = lowConsumer.delay(lowConsumer, timer+4) # "4" can be later replaced with a variable
+            answer = lowConsumer.delay(lowConsumer, timer+4) 
             i += 1
 
         friend = i
         totalRequests = abs(self.currentReqs())
         totalProduction = self.currentProduction()
 
-        if (totalProduction + self.currentResourceLevel - totalRequests) > self.lowerThreshold: # mozda je dovoljno da trend bude pozitivan ili neutralan (0), mozda i ne - pratiti simulacije
+        if (totalProduction + self.currentResourceLevel - totalRequests) > self.lowerThreshold: 
             print ("\n ** RESOURCE DEFICIT PREVENTED BY DELAYING! ** \n")
             return ("ok")
 
@@ -731,8 +731,8 @@ class StorageAgent:
         surplus = self.currentResourceLevel - self.lowerThreshold -1
 
 
-        if trend >= 0 and surplus > 0 and surplus >= toGive: # ako je produkcija veca od potrosnje, ako ima viskova i ima ih vise nego trazi susjed, daj mu onoliko koliko trazi
-            self.currentResourceLevel = self.currentResourceLevel - toGive # smanji svoje kolicine za toliko koliko se daje
+        if trend >= 0 and surplus > 0 and surplus >= toGive: 
+            self.currentResourceLevel = self.currentResourceLevel - toGive 
             print ("\n * ALL wanted resources available. Transferring %s units.. have a good day!" %toGive)
             self.currentReqs()
             return toGive
@@ -812,7 +812,7 @@ class StorageAgent:
         totalRequests = self.currentReqs()
         totalProduction = self.currentProduction()
 
-        #canTake = abs(self.upperThreshold - self.currentResourceLevel - totalProduction - totalRequests - 1) # OVO SE RACUNA NA KRAJU vrem.jedinice, pa su svi requestovi i production vec ukalkulirani u CRL
+        #canTake = abs(self.upperThreshold - self.currentResourceLevel - totalProduction - totalRequests - 1) 
         canTake = abs(self.upperThreshold - self.currentResourceLevel - 1)
         print ("\n ** %s: My CRL: %f" %(self.name, self.currentResourceLevel))
         print (" ** %s: My UT value: %f" %(self.name, self.upperThreshold))
