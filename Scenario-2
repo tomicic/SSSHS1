@@ -1,6 +1,6 @@
 ############################ SCENARIO 2: SPACE COLONY ####################################
 
-# ------------------- UNIT 1
+# ------------------- UNIT 1 
 
 # storage parameters: name, crl, maxCapacity, lower threshold, upper threshold
 # producer/consumer parameters: name, priority, capacity, workStart, workStop, belongsTo, eFactor)
