@@ -1,0 +1,249 @@
+SSSHS User Manual v1.1
+
+
+1. INTRODUCTION
+This is the user manual for the SSSHS framework toolkit. SSSHS framework can be used by the modeler to model, simulate, and analyze the self-sustainable system. The self-sustainable system can describe such systems as human settlements based both on and off-Earth, a fleet of independent space vehicles, underwater cities, etc. By following the instructions presented in this document, user will be able to:
+
+	* define global parameters of the framework
+	* model a complete system, i.e. the observed or newly designed human settlement 
+	* set up specific parameters of each system element
+	* run the simulation of the modeled system
+	* analyze the results of the simulation
+	
+		
+2. DEFINE GLOBAL PARAMETERS OF THE SYSTEM
+
+Global parameters refer to the simulation-wide variables and settings which directly control the simulation run. Variables and settings in this context are described hereafter.
+
+2.1 Temporal granularity of the simulation
+The SSSHS framework implicitly facilitates implementation of various temporal granularity requirements. This can include, but is not limited to:
+
+	* a day
+	* an hour
+	* a week
+	* a month
+	* a 1/4 month
+	* 5 days
+	* etc.
+	
+The framework's implicit nature of the temporal granularity enables user to focus on the problem domain, without further concerns about the granularity implementation. Upon deciding on the needed granularity, user can proceed to the step 2.2.
+
+2.2 Time duration of the simulation run
+Time duration of the simulation run is set via the variable:
+
+"sim_time"
+
+The following are some of the examples of the "sim_time" variable usage.
+
+### EXAMPLE 1 ###
+Time granularity: 1 days
+Simulation run: 1 month
+--->  sim_time = 30
+
+### EXAMPLE 2 ###
+Time granularity: 5 days
+Simulation run: 12 months
+--->  sim_time = 72
+
+### EXAMPLE 3 ###
+Time granularity: 1 hour
+Simulation run: 2 days
+--->  sim_time = 48
+
+
+2.3 Simulation starting time point 
+By default, simulation is starting at the starting time unit "1". This is set by the following variable:
+
+"timer = 1" 
+
+If the user needs to change the simulation starting time point, this variable can be set to any needed simulation starting value within the defined simulation time duration period. 
+
+
+3 MODELLING THE SYSTEM
+
+Initial use of the framework starts with a model of a specific system that needs to be designed and/or validated against the self-sustainability property. A modeler of the system defines/instantiates specific agent objects from the available classes offered by the framework.
+
+3.1 RESOURCE TYPE
+Before modelling, user decides on which resource type a system is going to be tested on. Resources can include, but are not limited to, the following:
+
+	* Water
+	* Electricity
+	* Heat
+	* Food
+	* Air
+	* etc.
+
+The SSSHS framework does not need specific input regarding the chosen resource type. The output of the simulation is interpreted by the user according to the simulated resource. 
+If the production of one resource type requires the consumption of one or more other resource types (or vice versa), this can be modelled by defining multiple storages per dwelling unit and assigning them appropriate distribution lists as described in the following sections. 
+	
+
+3.2 MODELLING RESOURCE PRODUCERS, CONSUMERS AND STORAGES
+A system is modelled by instantiating agent classes and setting their parameters; connecting producers, storages, and consumers into dwelling subsystems; and connecting these dwelling subsystems into a settlement system which will be simulated for self-sustainability for a given resource type.
+
+3.2.1 Modelling Resource Producers
+
+The following is the example of the resource producer instantiation:
+
+	producer2 = agent ("HANDWORK-U1", 1, productionDistribution2, 1, 30, storages[0], 1)
+	
+The producer's parameters from the above example are set as follows:
+
+	a) "HANDWORK-U1" -> symbolic name for the producer
+	b) 1 -> producer priority
+	c) productionDistribution2 -> production distribution for the simulated time period
+	d) 1 -> producer starting time in the simulation run period
+	e) 30 -> producer stopping time in the simulation run period
+	f) storages[0] -> associated storage unit
+
+The user must provide the input distribution list which defines the resource production in the observed simulation run, such as:
+
+	productionDistribution2 = [60,0,40,0,0,40,60,60,60,60,60,60,0,0,0,60,60,60,60,0,60,40,20,0,60,60,0,60,60,60]
+	
+NOTE: The list must have the exact number of items which corresponds to the defined simulation run time period (in this example, 30).
+
+User can set the following list of relevant parameters for the resource producer:
+
+	* priority. Within the specific list of the consumers that shall be within the model, a modeller decides on the relative importance of these consumers against themselves.
+	* capacity. A modeler should have data about the consumer’s/producer’s capability of consuming resources in some time unit.
+	* workStart. A modeler inputs the producer/consumer operation starting time point.
+	* workStop. A modeler inputs the producer/consumer operation ending time point.
+	* economyPossible. Having the real-life scenario in mind, a modeler inputs whether the specific consumer has or has not the ability to operate in a reduced-consumption mode.
+	* economyFactor. A number from range 0.1 - 0.9, representing the factor by which the default capacity values are multiplicated when agent enters its savings mode. This number is defined and entered by the modeler in the system instantialization.
+	* advancePossible. If earlier starting is possible for a specific consumer, a modeler enters “YES”.
+	* maxAdvance. Maximum value of advancing operating time, set by the modeler. A modeler should carefully consider this value, as it affects both the starting and ending operation times of the consumption unit.
+	* delayPossible. Determines if it is possible to postpone the operating time of a consumer in order to avoid the resource deficiency or peak consumption values.
+	* maxDelay. Maximum time units for which the time delay of a consumer is possible. A modeler should carefully consider this value, as it affects both the starting and ending operation times of the consumption unit.
+
+	
+3.2.2 Modelling Storage Units
+
+The following excerpt is the example of the storage unit instantiation:
+
+	storage1 = StorageAgent("UNIT-1", 700, 2000, 300, 1700, storage1Costs, 20, 1)
+	
+The storage's parameters from the above example are set as follows:
+
+	* "UNIT-1" -> a symbolic name for the storage unit
+	* 700 -> starting resource level (amount of resources present at the start of the simulation run)
+	* 2000 -> a maximum capacity of the storage unit
+	* 300 -> value which triggers lower threshold mechanisms of the framework
+	* 1700 -> value which triggers upper threshold mechanisms of the framework
+	* storage1Costs -> transfer costs between storage units belonging to different dwelling units
+	* 20 -> acceptable transfer cost value
+	* Resource ID
+	
+User can set the following list of relevant parameters for the storage unit:
+
+	* maxCapacity. Maximum storage capacity of the storage. Use the measuring unit consistently throughout the modelling process.
+	* currentResourceLevel. Set the initial level of resources in the specific storage unit. A simulation shall start with this value as a starting point.
+	* upperThreshold. Set the “alarm” threshold value of the resource surplus.
+	* lowerThreshold. Set the “alarm” threshold value of the resource deficit.
+	* Transfer costs. This needs to be defined in Python dictionaries, and it describes costs between storage units belonging to different dwelling units. These costs are defined as follows:
+		
+		storage1Costs = {"UNIT-2" : 1, "UNIT-3" : 2, "UNIT-1-2" : 100} # transfer costs between dwelling Unit 1 and other dwelling units (Unit 2 and Unit 3)
+		storage2Costs = {"UNIT-1" : 1, "UNIT-3" : 1, "UNIT-1-2" : 100}
+		storage3Costs = {"UNIT-1" : 2, "UNIT-2" : 1, "UNIT-1-2" : 100}
+		
+	The user can replace the existing costs and/or add/remove dictionaries according to the modelled storages number, which belong to the same network.
+	
+	* Acceptable transfer cost. User can define which value is regarded as maximum acceptable for potential transfers. Transfers which cost more than this value are disregarded.
+	* Resource ID. This value identifies storages that belong to the same network - the value is purely symbolic and the storages that have the same Resource ID are able to communicate and exchange resources in the negotiation processes, because it is assumed that these storages process the same resource type (for example electricity, where these storages represent batteries). 
+
+	
+3.2.3 Modelling Resource Consumers
+
+The following is the example of the resource consumer instantiation:
+
+	cunsumer1 = agent ("Person1-U1", 10, consumptionDistribution1, 1, 30, storages[0], 0.5)
+	
+The consumer's parameters from the above example are set as follows:
+
+	a) "Person1-U1" -> symbolic name for the consumer
+	b) 10 -> consumer priority
+	c) consumptionDistribution1 -> consumption distribution for the simulated time period
+	d) 1 -> consumer starting time in the simulation run period
+	e) 30 -> consumer stopping time in the simulation run period
+	f) storages[0] -> associated storage unit
+	g) 0.5 -> resource savings factor
+	
+The user must provide the input distribution list which defines the resource consumption in the observed simulation run, such as:
+
+	consumptionDistribution1 = [-50,-50,-50,-50,-50,-50,-50,-50,-50,-50,-50,-50,-50,-50,-50,-50,-50,-50,-50,-50,-50,-50,-50,-50,-50,-50,-50,-50,-50,-50]
+
+NOTE: The list must have the exact number of items which corresponds to the defined simulation run time period (in this example, 30).
+
+
+4 SIMULATION
+
+At the end of simulation, SSSHS framework reports both global system, and individual storage unit's final states as follows:
+
+ ******* Number of system interventions: 125
+ *********** First intervention happened at time: 2
+
+
+ ******* Number of LT ALERTS: 11 --> total number of events that triggered lower threshold ("LT") mechanisms
+
+ *********** Number of DELAY  requests: 24 --> total number of events that triggered "delay" mechanism
+ *********** Number of ECONOMY requests: 22 --> total number of events that triggered "economy" mechanism
+ *********** Number of NEGOTIATION requests: 11 --> total number of events that triggered "negotiation" mechanism
+
+
+ ******* Number of UT ALERTS: 24 --> total number of events that triggered upper threshold ("UP") mechanisms
+
+ *********** Number of RESTORE requests: 16 --> total number of events that triggered "restore default capacities" mechanism
+ *********** Number of ADVANCE requests: 0 --> total number of events that triggered "advance operating time" mechanism
+ *********** Number of GIVE requests: 52 --> total number of events that triggered "give surplus of resources" mechanism
+ *********** Overflow of resources: 2809.350000 --> total overflow of resources (how much resources were lost in the simulation run)
+ 
+ INDIVIDUAL REPORT FOR STORAGE UNIT-1
+ - Capacity: 2000
+ - CRL: 482
+ - UT alerts: 4
+ - Advance reqs: 0
+ - Resources lost: 185.000000
+ - LT alerts: 4
+ - Economy reqs: 10
+ - Delay reqs: 11
+CRL HISTORY: [700, 534.5, 1699.0, 1559.3, 1376.0, 1164.1, 904.0999999999999, 673.5999999999999, 432.5999999999999, 307.5999999999999, 301.0, 222.9, 22.799999999999976, 697.9999999999999, 2000, 1989.5, 1901.0, 1393.5, 1132.5, 892.5, 1901.0, 1699.0, 1589.0, 1307.0, 1004.0, 876.5, 629.5, 301.0, 621.5, 723.2]
+OVERFLOW per time unit: [185.0]  --> records resource loss quantities per time unit (in this case, overflow of resources happened in only one time unit during the simulation run)
+
+
+INDIVIDUAL REPORT FOR STORAGE UNIT-2
+ - Capacity: 1440
+ - CRL: 796
+ - UT alerts: 7
+ - Advance reqs: 0
+ - Resources lost: 908.550000
+ - LT alerts: 3
+ - Economy reqs: 6
+ - Delay reqs: 6
+CRL HISTORY: [350, 312.75, 924.25, 862.25, 848.5, 818.75, 758.75, 690.0, 590.0, 489.0, 258.79999999999995, 176.0, 120.9, 692.05, 1440, 1440, 1329.5, 1099.0, 687.0, 587.0, 1440, 1321.0, 1099.0, 737.0, 634.0, 667.75, 580.75, 434.25, 821.0, 897.25]
+OVERFLOW per time unit: [589.5500000000002, 181.75, 137.25]
+
+
+INDIVIDUAL REPORT FOR STORAGE UNIT-3
+ - Capacity: 1500
+ - CRL: 699
+ - UT alerts: 13
+ - Advance reqs: 0
+ - Resources lost: 1715.800000
+ - LT alerts: 4
+ - Economy reqs: 6
+ - Delay reqs: 7
+CRL HISTORY: [700, 684.8, 999.3, 799.0, 799.0, 799.0, 676.0, 612.2, 510.20000000000005, 405.20000000000005, 215.10000000000005, 171.0, 31.0, 799.0, 1500, 1500, 1263.0, 799.0, 678.0, 318.0, 1500, 1400, 799, 399, 299, 328, 226, 201.0, 795.0, 799.0]
+OVERFLOW per time unit: [1175.4, 251, 289.4000000000001]
+
+
+INDIVIDUAL REPORT FOR STORAGE UNIT-1-2
+ - Capacity: 500
+ - CRL: 61
+ - UT alerts: 0
+ - Advance reqs: 0
+ - Resources lost: 0.000000
+ - LT alerts: 0
+ - Economy reqs: 0
+ - Delay reqs: 0
+CRL HISTORY: [31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60]
+OVERFLOW per time unit: []
+ 
+Explicit interpretation of the simulation results depends on the modelled system, its parameters and their specific meanings. 
