@@ -1,4 +1,3 @@
-@@ -0,0 +1,1111 @@
 # -*- coding: cp1250 -*-
 
 
@@ -10,7 +9,7 @@ from time import sleep, gmtime, strftime
 
 #resources=15
 
-sim_time = 45
+sim_time = 30
 callbacks = []
 timer = 1
 agents = []
@@ -22,10 +21,10 @@ allConsumption = []
 allProduction = []
 lowestCRLstorages = []
 
-### STATISTICS ###
+### STATISTICAL DATA AHEAD ###
 
 Overflow = 0
-totalInterventions = 0 # Total number of system interventions.
+totalInterventions = 0 # Total number of system interventions. If the number is "fairly big", the system needs architectural changes.
 firstIntervention = 0 # Time unit in which the first system intervention happened.
 interventionTimes = [] # a list of time units in which interventions happened
 economyRequests = 0 # A total number of economy requests
@@ -38,7 +37,7 @@ UTalerts = 0 # upper threshold alerts
 LTalerts = 0 # lower threshold alerts
 
 
-###### SIMULATION CONTROL FUNCTION ###### 
+###### FUNCTION WHICH RUNS THE SIMULATION ######
 
 def startSimulation():
 
@@ -106,6 +105,7 @@ class observerAgent:
 
         for s in storages:
             print ("\n\nINDIVIDUAL REPORT FOR STORAGE %s" %s.name)
+            print (" - Capacity: %d" %(s.maxCapacity))
             print (" - CRL: %d" %(s.currentResourceLevel))
             print (" - UT alerts: %d" %(s.myUTalerts))
             print (" - Advance reqs: %d" %(s.myAdvanceReqs))
@@ -114,6 +114,7 @@ class observerAgent:
             print (" - Economy reqs: %d" %(s.myEconomyReqs))
             print (" - Delay reqs: %d" %(s.myDelayReqs))
             print ("CRL HISTORY: %s" %s.CRLhistory)
+            print ("OVERFLOW per time unit: %s" %s.overflowHistory)
 
         exit()
 
@@ -131,6 +132,7 @@ class observerAgent:
             total_consumption = s.currentReqs()
 
             print("\n Hello, I am STORAGE %s, regularly reporting:" %(s.name))
+            print(" ---- My resource ID: %d" %s.resourceID)
             print(" ---- My resource level: %f" %s.currentResourceLevel)
             s.CRLhistory.append(s.currentResourceLevel)
             print(" ---- My CRL history: %s" %s.CRLhistory)
@@ -139,8 +141,8 @@ class observerAgent:
             print(" ---- My total consumption: %f" %total_consumption)
             #print(" ---- My agent codes: %s" %s.myAgents)
             #print(" ---- My agents: %s" %s.myAgentNames)
-            print(" ---- My PRODUCERS: %s" %s.myProducers) 
-            print(" ---- My CONSUMERS: %s" %s.myConsumers) 
+            print(" ---- My PRODUCERS: %s" %s.myProducers) # ...TO-DO
+            print(" ---- My CONSUMERS: %s" %s.myConsumers) # ...TO-DO
             print(" ---- My agents working in economy mode: %s " %s.agentsInEconomy)
 
 
@@ -169,7 +171,7 @@ class agent:
         self.delayPossible = "YES"
         self.maxDelay = 6
         self.currentDelay = 0
-        self.worked = "NO"
+        self.worked = "NO" # if YES -> this agent has already worked in the current time unit; otherwise NO
 
         if sum(self.capacity) < 0:
             self.type = "CONSUMER"
@@ -189,7 +191,7 @@ class agent:
            
             print (" ------ MY STORAGE: %s" %myStorage.name)
 
-            if isinstance(self.capacity,list) == True:
+            if isinstance(self.capacity,list) == True: # temporary if/else, now the inputs are all in lists
                 myStorage.currentResourceLevel += self.capacity[timer-1]
                 print (" ------ MY CAPACITY: %f" %self.capacity[timer-1])
             else:
@@ -205,7 +207,7 @@ class agent:
 
 
 
-    def changeMode (self, lowConsumer):
+    def changeMode (self, lowConsumer): # changing the mode to the ECONOMY mode
 
         print ("\n FUNCTION: changeMode\n")
         myStorage = agentStorage.get(self)
@@ -234,9 +236,9 @@ class agent:
            return "ok"
 
 
-    def advance (self, lowConsumer): 
+    def advance (self, lowConsumer): # funkcija za prijevremeno izvrsavanje rada potrosaca
 
-        #self.advanceTime = advanceTime 
+        #self.advanceTime = advanceTime # Implement this LATER. For now, we are assuming that the new starting hour will be NOW (workStart=timer )
 
         if self.advancePossible == "NO":
             print ("Time advance operation not possible for agent %s. Sorry." %lowConsumer)
@@ -287,10 +289,11 @@ class agent:
         
 
 class StorageAgent:
-    def __init__ (self, name, crl, maxCapacity, lowerThreshold, upperThreshold):
+    def __init__ (self, name, crl, maxCapacity, lowerThreshold, upperThreshold, storageCosts, acceptableCost, resourceID):
 
         storages.append(self)
 
+        self.resourceID = resourceID
         self.name = name
         self.maxCapacity = maxCapacity
         self.currentResourceLevel = crl
@@ -313,6 +316,15 @@ class StorageAgent:
         self.myDelayReqs = 0
         self.myAdvanceReqs = 0
         self.CRLhistory = []
+        self.overflowHistory = []
+        self.storageCosts = storageCosts
+        self.acceptableCost = acceptableCost
+
+        #NEGOTIATION PARAMETERS:
+        #self.value = value
+        #self.strategy = strategy
+        #self.initialPrice = price
+        #self.initialQuantOffer = IQO # percentage
 
 
     def callAgents(self, timer):
@@ -336,6 +348,7 @@ class StorageAgent:
         for a in self.myAgents:
             a.working(timer)
             #print ("debugging info: calling working function of agent %s" %a)
+            # TO CALL THRESHOLD ALERT AFTER EVERY CHANGE, OR ONLY AT THE END OF THE TIME UNIT?
             #self.thresholdAlert
         self.thresholdAlert
 
@@ -351,7 +364,7 @@ class StorageAgent:
         return totalReqs
 
 
-    def tomorrowRequests(self): 
+    def tomorrowRequests(self): # THIS IS WORK IN PROGRESS for future versions
 
         tomorrowReqs = 0
 
@@ -373,7 +386,7 @@ class StorageAgent:
         return totalProduction
 
 
-    def tomorrowProduction(self): 
+    def tomorrowProduction(self):  # THIS IS WORK IN PROGRESS for future versions
 
         tomorrowProducs = 0
 
@@ -557,7 +570,7 @@ class StorageAgent:
         totalRequests = self.tomorrowRequests() # if some consumer responded with "OK", calculate if the new total values are still beneath the threshold
         totalProduction = self.tomorrowProduction()
 
-        #if (totalProduction - totalRequests + self.currentResourceLevel) > self.lowerThreshold: 
+        #if (totalProduction - totalRequests + self.currentResourceLevel) > self.lowerThreshold: # KITA. SAD PAK NE GLEDA kaj se desava danas, nego samo sutra, pa recimo iako nitko ne moze od potrosaca u economy, on prijavljuje SUCCESS.
         if self.currentResourceLevel > self.lowerThreshold:
             print ("\n ** NICE! Economy mode SAVED the day for the next time unit! ** ")
             return ("ok")
@@ -568,10 +581,10 @@ class StorageAgent:
             self.currentOperatingMode = "economy"
 
             # neededResources = self.lowerThreshold - self.currentResourceLevel + totalRequests + 1
-            # neededResources = self.lowerThreshold - (self.currentResourceLevel+totalProduction-totalRequests) + 1 
+            # neededResources = self.lowerThreshold - (self.currentResourceLevel+totalProduction-totalRequests) + 1 # trazi onoliko koliko ce trebati u SLJEDECOJ vremenskoj jedinici
             neededResources = self.lowerThreshold - self.currentResourceLevel + 1
 
-            print (" ** %s asking for neighbour help, needed amount: %f \n \n" %(self.name, neededResources))
+            print (" ** %s asking for neighbour help, needed amount: %f " %(self.name, neededResources))
 
             negotiationResult = self.startNegotiation(neededResources, 0)
 
@@ -606,11 +619,11 @@ class StorageAgent:
 
 
         friend = i
-        totalRequests = abs(self.currentReqs()) 
+        totalRequests = abs(self.currentReqs()) # ponovno izracunavanje ukupnih zahtjeva - sada se potrosac "friend" dodaje zbroju jer mu se radno vrijeme pomaknulo unaprijed
         totalProduction = self.currentProduction()
 
         #if (self.currentResourceLevel + productionCapacity - totalRequests) < self.upperThreshold:
-        if (totalProduction - totalRequests) <= 0: 
+        if (totalProduction - totalRequests) <= 0: # mozda je dovoljno da trend bude negativan ili neutralan (0), mozda i ne - pratiti simulacije
             print (" ** RESOURCE LOSS PREVENTED BY ADVANCING! ** \n")
             return ("ok")
 
@@ -639,14 +652,14 @@ class StorageAgent:
         while answer == 0 and i != len(self.agentsByPriority):
 
             lowConsumer = self.agentsByPriority[i]
-            answer = lowConsumer.delay(lowConsumer, timer+4) 
+            answer = lowConsumer.delay(lowConsumer, timer+4) # "4" can be later replaced with a variable
             i += 1
 
         friend = i
         totalRequests = abs(self.currentReqs())
         totalProduction = self.currentProduction()
 
-        if (totalProduction + self.currentResourceLevel - totalRequests) > self.lowerThreshold: 
+        if (totalProduction + self.currentResourceLevel - totalRequests) > self.lowerThreshold: # mozda je dovoljno da trend bude pozitivan ili neutralan (0), mozda i ne - pratiti simulacije
             print ("\n ** RESOURCE DEFICIT PREVENTED BY DELAYING! ** \n")
             return ("ok")
 
@@ -666,7 +679,13 @@ class StorageAgent:
         global negotiationRequests
         negotiationRequests += 1
 
-        self.myNeighbours = storages[:]
+        #self.myNeighbours = storages[:]
+
+        for r in storages:
+            if r.resourceID == self.resourceID:
+                self.myNeighbours.append(r)
+
+
         #print ("debugging info: BEFORE DELETING self.myNeighbours: %s" %self.myNeighbours)
         #print ("debugging info: BEFORE DELETING storages: %s" %storages)
 
@@ -689,17 +708,36 @@ class StorageAgent:
             return "nn"
 
         else:
-            print ("\n ** My Neighbours (for negotiation): %s " %self.myNeighbours)
+            print (" ** My Neighbours (for negotiation): %s " %self.myNeighbours)
 
         i = j
         answer = 0
+        cost = 0
         #print ("DEBUGGING INFO, i VALUE: %d" %i)
 
         while answer == 0 and i != len(self.myNeighbours):
            closestNeighbour = self.myNeighbours[i]
            print("\n >> Pinging neighbour: %s" %closestNeighbour.name)
-           answer = closestNeighbour.resourceNegotiation(need)
-           i+=1
+           #print("\n >> Transfer costs from %s: %s" %(closestNeighbour.name, self.storageCosts))
+
+           cost = self.storageCosts.get(closestNeighbour.name)
+
+           print ("\n >> Transfer costs from %s: %s" %(closestNeighbour.name, cost))
+
+           if cost < self.acceptableCost:
+               print ("\n >> TRANSFER COST ACCEPTABLE.")
+               # priceTotal = self.initialPrice * need
+               # request_offer = [need, priceTotal]
+               # iteration = 0
+               # print("\n\n >> Iteration 1: %d" %iteration)
+               # print("\n >> Offer sent: %s" %request_offer)
+               # answer = closestNeighbour.resourceNegotiation(request_offer)
+               answer = closestNeighbour.resourceNegotiation(need)
+               i+=1
+           else:
+               print ("\n >> TRANSFER COST NOT ACCEPTABLE.")
+               answer = 0
+               i+=1
 
         friend = i
         self.currentResourceLevel = self.currentResourceLevel + answer
@@ -730,9 +768,13 @@ class StorageAgent:
         trend = self.currentProduction() - self.currentReqs()
         surplus = self.currentResourceLevel - self.lowerThreshold -1
 
+        # initial_resource_offer = surplus*self.initialQuantOffer/100
+        # priceTotal = self.initialPrice*initial_resource_offer
+        # counterOffer = [initial_resource_offer, priceTotal]
 
-        if trend >= 0 and surplus > 0 and surplus >= toGive: 
-            self.currentResourceLevel = self.currentResourceLevel - toGive 
+
+        if trend >= 0 and surplus > 0 and surplus >= toGive: # ako je produkcija veca od potrosnje, ako ima viskova i ima ih vise nego trazi susjed, daj mu onoliko koliko trazi
+            self.currentResourceLevel = self.currentResourceLevel - toGive # smanji svoje kolicine za toliko koliko se daje
             print ("\n * ALL wanted resources available. Transferring %s units.. have a good day!" %toGive)
             self.currentReqs()
             return toGive
@@ -754,16 +796,22 @@ class StorageAgent:
         giveRequests += 1
 
         #self.myNeighbours = storages[:]
-        self.myNeighbours = observer.lowestCRLstoragesList()
+
+        #self.myNeighbours = observer.lowestCRLstoragesList()
+
+        self.myNeighbours = []
+        for r in storages:
+            if r.resourceID == self.resourceID:
+                self.myNeighbours.append(r)
 
         if not self.myNeighbours:
-            print (" * Sorry, no neighbours detected. No-one go give freebies :(")
+            print (" * Sorry, no neighbours detected. No-one to give freebies :(")
             return "nn"
 
         self.myNeighbours.remove(self)
 
         if not self.myNeighbours:
-            print (" * Sorry, no neighbours detected. No-one go give freebies :(")
+            print (" * Sorry, no neighbours detected. No-one to give freebies :(")
             return "nn"
 
         else:
@@ -800,6 +848,7 @@ class StorageAgent:
             if currentLoss > 0:
                 self.ResourceLoss = self.ResourceLoss + currentLoss
                 self.currentResourceLevel = self.maxCapacity
+                self.overflowHistory.append(currentLoss)
                 print ("\n ---- Lost resources just now: %f" %currentLoss)
             #self.currentResourceLevel = self.currentResourceLevel - currentLoss
             print ("\n ---- New Level for %s: %f" %(self.name, self.currentResourceLevel))
@@ -812,7 +861,7 @@ class StorageAgent:
         totalRequests = self.currentReqs()
         totalProduction = self.currentProduction()
 
-        #canTake = abs(self.upperThreshold - self.currentResourceLevel - totalProduction - totalRequests - 1) 
+        #canTake = abs(self.upperThreshold - self.currentResourceLevel - totalProduction - totalRequests - 1) # OVO SE RACUNA NA KRAJU vrem.jedinice, pa su svi requestovi i production vec ukalkulirani u CRL
         canTake = abs(self.upperThreshold - self.currentResourceLevel - 1)
         print ("\n ** %s: My CRL: %f" %(self.name, self.currentResourceLevel))
         print (" ** %s: My UT value: %f" %(self.name, self.upperThreshold))
