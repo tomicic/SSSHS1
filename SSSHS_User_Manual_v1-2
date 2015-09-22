@@ -1,4 +1,4 @@
-SSSHS User Manual v1.1
+SSSHS User Manual v1.2
 
 
 1. INTRODUCTION
@@ -57,7 +57,6 @@ By default, simulation is starting at the starting time unit "1". This is set by
 "timer = 1" 
 
 If the user needs to change the simulation starting time point, this variable can be set to any needed simulation starting value within the defined simulation time duration period. 
-
 
 3 MODELLING THE SYSTEM
 
@@ -150,6 +149,32 @@ User can set the following list of relevant parameters for the storage unit:
 	* Resource ID. This value identifies storages that belong to the same network - the value is purely symbolic and the storages that have the same Resource ID are able to communicate and exchange resources in the negotiation processes, because it is assumed that these storages process the same resource type (for example electricity, where these storages represent batteries). 
 
 	
+3.2.2.1 Negotiation Parameters
+
+User of the SSSHS framework can set several important parameters which have a direct influence on the negotiation process. These parameters are described hereafter.
+
+*	buyer_value. A list of qualitative values required for the usefulness function in the negotiation process from the buyer (client) perspective. 
+		
+		Example -> buyerValue = [0.99,-0.01]
+		This example illustrates that the first element of offer is regarded more important for the buyer (client), than the second. The sum of these two values must always be exactly 1. User can set these values according to the simulation scenario context.
+		
+*	seller_value. A list of qualitative values required for the usefulness function in the negotiation process from the seller (server) perspective.  
+		Example -> sellerValue = [-0.6,0.4]
+		Interpretation equivalent to the buyerValue parameter.
+	
+*	buyer_strategy. A list of values needed for the strategy method in order to produce a new offer based on the strategy algorithm, from the buyer (client) perspective.
+		Example. -> buyerStrategy = [0,0.008]
+		This example illustrates that the buyer is not willing to change its request regarding the first element of offer. The second element of the offer will be changed according to the strategy algorithm and the coefficient 0.008.
+		
+*	seller_strategy. A list of values needed for the strategy method in order to produce a new offer based on the strategy algorithm, from the seller (server) perspective.
+		Example -> sellerStrategy = [1,-0.004]
+		
+*	negTimerMax. A value that determines maximum possible number of iterations in the negotiation process. It is set as an integral.
+		Example -> negTimerMax = 1000
+
+*	worth. A second element of the offer in the negotiation process. Can be assigned to monetary value, quality, or other aspects, as defined by the modeler of the system. The variable defines initial level of the chosen offer element.
+
+
 3.2.3 Modelling Resource Consumers
 
 The following is the example of the resource consumer instantiation:
