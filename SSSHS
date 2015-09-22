@@ -37,7 +37,7 @@ UTalerts = 0 # upper threshold alerts
 LTalerts = 0 # lower threshold alerts
 
 
-###### FUNCTION WHICH RUNS THE SIMULATION ######
+###### FUNCTION THAT RUNS THE SIMULATION ######
 
 def startSimulation():
 
@@ -236,7 +236,7 @@ class agent:
            return "ok"
 
 
-    def advance (self, lowConsumer): # funkcija za prijevremeno izvrsavanje rada potrosaca
+    def advance (self, lowConsumer): 
 
         #self.advanceTime = advanceTime # Implement this LATER. For now, we are assuming that the new starting hour will be NOW (workStart=timer )
 
@@ -289,7 +289,7 @@ class agent:
         
 
 class StorageAgent:
-    def __init__ (self, name, crl, maxCapacity, lowerThreshold, upperThreshold, storageCosts, acceptableCost, resourceID):
+    def __init__ (self, name, crl, maxCapacity, lowerThreshold, upperThreshold, storageCosts, acceptableCost, resourceID, buyerValue, buyerStrategy, sellerValue, sellerStrategy, negTimerMax, worth):
 
         storages.append(self)
 
@@ -319,12 +319,203 @@ class StorageAgent:
         self.overflowHistory = []
         self.storageCosts = storageCosts
         self.acceptableCost = acceptableCost
+        self.negotiationAnswer = 0
 
         #NEGOTIATION PARAMETERS:
-        #self.value = value
-        #self.strategy = strategy
-        #self.initialPrice = price
-        #self.initialQuantOffer = IQO # percentage
+        self.give = 1
+        self.initial = [0,0]
+
+        #self.buyer_initial_offer = [self.need, 1]
+        self.seller_initial_offer = [self.give, 10]
+
+        self.buyer_value = buyerValue
+        self.buyer_strategy = buyerStrategy
+
+        self.seller_value = sellerValue
+        self.seller_strategy = sellerStrategy
+
+        self.negTimer = 0
+        self.negTimerMax = negTimerMax
+
+        self.buyer_current_offer = []
+        self.seller_current_offer = []
+
+        self.worth = worth
+
+
+
+    def Strategy (self, offer, strategy):
+
+        p = offer
+        s = strategy
+
+        new_offer = []
+
+        '''
+        for i in range(len(p)):
+            tmp = p[i] + s[i]
+            new_offer.append(tmp)
+
+        return new_offer
+        '''
+        new_quantity = p[0] + s[0]
+        new_price = p[1] + p[1]*s[1]
+        new_offer = [new_quantity, new_price]
+        return new_offer
+
+
+
+    def Value (self, offer, value):
+
+        p = offer
+        k = value
+        value_calc = 0
+
+        for i in range(len(p)):
+            tmp = p[i]*k[i]
+            value_calc += tmp
+
+        return value_calc
+
+
+    def buying (self, counter_offer, seller):
+
+        received_offer = counter_offer
+        seller = seller
+
+        print("\n\n ****** BUYER %s > Iteration number: %d *******" %(self.name, self.negTimer))
+        print ("\n")
+
+        if received_offer != self.initial:
+            print(" BUYER %s > Received offer from seller: %s" %(self.name, received_offer))
+
+        if self.negTimer >= self.negTimerMax:
+            print(" BUYER %s > Time limit exceeded, exciting negotiations now." %self.name)
+            self.negTimer = 0
+
+            self.negotiationAnswer = 0
+            return 0
+
+        if received_offer == self.initial:
+            self.need = self.lowerThreshold - self.currentResourceLevel + 1
+            seller_max = seller.currentResourceLevel - seller.lowerThreshold - 1
+            print(" BUYER %s > I need: %f." %(self.name, self.need))
+            print(" BUYER %s > Seller CRL: %f." %(self.name, seller.currentResourceLevel))
+            print(" BUYER %s > Seller can give max: %f." %(self.name, seller_max))
+
+            if self.need <= seller_max:
+                self.buyer_initial_offer = [self.need, 1]
+                self.buyer_current_offer = self.buyer_initial_offer
+
+            else:
+                self.buyer_initial_offer = [seller_max, 1]
+                self.buyer_current_offer = self.buyer_initial_offer
+
+            print(" BUYER %s > INITIAL OFFER: %s" %(self.name, self.buyer_current_offer))
+
+        else:
+            new_offer = self.Strategy (self.buyer_current_offer, self.buyer_strategy)
+            self.buyer_current_offer = new_offer
+            #print ("BUYER > NEW OFFER:")
+            #print (self.buyer_current_offer)
+
+
+        my_value = self.Value (self.buyer_current_offer, self.buyer_value)
+        print(" BUYER %s > My Value: %f" %(self.name, my_value))
+
+        buyer_received_value = self.Value (counter_offer, self.buyer_value)
+        print(" BUYER %s > Received Value: %f" %(self.name, buyer_received_value))
+
+
+        if buyer_received_value  >= my_value:
+            print ("\n ** BUYER %s > Negotiations Successful!" %self.name)
+            print (" ** BUYER %s > TOTAL ITERATIONS: %d" %(self.name, self.negTimer))
+            print (" ** BUYER %s > ACCEPTED OFFER: %s" %(self.name, received_offer))
+
+            print (" ** BUYER %s > New CRL: %d" %(self.name, self.currentResourceLevel))
+
+            #print (self.negTimer)
+            self.negTimer = 0
+            self.worth = self.worth - received_offer[1]
+            seller.worth = seller.worth + received_offer[1]
+            seller.currentResourceLevel = seller.currentResourceLevel - received_offer[0]
+            print (" ** BUYER %s > New Worth Amount: %f" %(self.name, self.worth))
+            print (" ** SELLER %s > New Worth Amount: %f" %(seller.name, seller.worth))
+            print (" ** SELLER %s > New CRL: %f" %(seller.name, seller.currentResourceLevel))
+
+            #print (self.worth)
+
+            answer = received_offer[0]
+
+            self.negotiationAnswer = answer
+            return answer
+
+        else:
+            self.negTimer += 1
+            print("\n BUYER %s > CONTACTING THE SELLER %s WITH OFFER: %s" %(self.name, seller.name, self.buyer_current_offer))
+
+            seller.selling (self.buyer_current_offer, self.negTimer, self)
+
+
+    def selling (self, asked_quantity, timer, buyer):
+
+        buyer_received_offer = asked_quantity
+        timer = timer
+        buyer = buyer
+
+        print("\n\n SELLER %s > The following offer received from Buyer: %s" %(self.name, buyer_received_offer))
+        maxQ = self.currentResourceLevel - self.lowerThreshold + 1
+        print(" SELLER %s > My CRL: %f" %(self.name, self.currentResourceLevel))
+        print(" SELLER %s > Max quantity for spare: %f" %(self.name, maxQ))
+
+        #print (buyer_received_offer)
+
+        if timer >= self.negTimerMax:
+            print(" SELLER %s > Time limit exceeded, exciting negotiations now." %(self.name))
+            buyer.negTimer = 0
+            return 0
+
+        elif timer == 1:
+            self.seller_current_offer = self.seller_initial_offer
+            print (" SELLER %s > INITIAL OFFER: %s" %(self.name, self.seller_current_offer))
+            #print (self.seller_current_offer)
+
+        else:
+            new_offer = self.Strategy (self.seller_current_offer, self.seller_strategy)
+            self.seller_current_offer = new_offer
+            print (" SELLER %s > NEW OFFER: %s" %(self.name, self.seller_current_offer))
+            #print (self.seller_current_offer)
+
+
+        my_value = self.Value (self.seller_current_offer, self.seller_value)
+        print(" SELLER %s > My Value: %f" %(self.name, my_value))
+
+        seller_received_value = self.Value (buyer_received_offer, self.seller_value)
+        print(" SELLER %s > Received Value: %f" %(self.name, seller_received_value))
+
+
+        if seller_received_value  >= my_value:
+            print ("\n ** SELLER %s > Negotiations Successful by the seller!" %self.name)
+            print (" ** SELLER %s > TOTAL ITERATIONS: %d" %(self.name, timer))
+            print (" ** SELLER %s > ACCEPTED OFFER: %s" %(self.name, buyer_received_offer))
+            buyer.negTimer = 0
+
+            self.worth = self.worth + buyer_received_offer[1]
+            buyer.worth = buyer.worth - buyer_received_offer[1]
+            self.currentResourceLevel = self.currentResourceLevel - buyer_received_offer[0]
+            print (" ** SELLER %s > New Worth Amount: %f" %(self.name, self.worth))
+            print (" ** SELLER %s > New CRL: %f" %(self.name, self.currentResourceLevel))
+            print (" ** BUYER %s > New Worth Amount: %f" %(buyer.name, buyer.worth))
+
+            answer = buyer_received_offer[0]
+
+            buyer.negotiationAnswer = answer
+            return answer
+
+        else:
+            print(" SELLER %s > CONTACTING THE CLIENT %s WITH OFFER: %s" %(self.name, buyer.name, self.seller_current_offer))
+            seller_answer = buyer.buying (self.seller_current_offer, self)
+
 
 
     def callAgents(self, timer):
@@ -570,7 +761,6 @@ class StorageAgent:
         totalRequests = self.tomorrowRequests() # if some consumer responded with "OK", calculate if the new total values are still beneath the threshold
         totalProduction = self.tomorrowProduction()
 
-        #if (totalProduction - totalRequests + self.currentResourceLevel) > self.lowerThreshold: # KITA. SAD PAK NE GLEDA kaj se desava danas, nego samo sutra, pa recimo iako nitko ne moze od potrosaca u economy, on prijavljuje SUCCESS.
         if self.currentResourceLevel > self.lowerThreshold:
             print ("\n ** NICE! Economy mode SAVED the day for the next time unit! ** ")
             return ("ok")
@@ -581,7 +771,7 @@ class StorageAgent:
             self.currentOperatingMode = "economy"
 
             # neededResources = self.lowerThreshold - self.currentResourceLevel + totalRequests + 1
-            # neededResources = self.lowerThreshold - (self.currentResourceLevel+totalProduction-totalRequests) + 1 # trazi onoliko koliko ce trebati u SLJEDECOJ vremenskoj jedinici
+            # neededResources = self.lowerThreshold - (self.currentResourceLevel+totalProduction-totalRequests) + 1 
             neededResources = self.lowerThreshold - self.currentResourceLevel + 1
 
             print (" ** %s asking for neighbour help, needed amount: %f " %(self.name, neededResources))
@@ -598,7 +788,7 @@ class StorageAgent:
 
 
 
-    def reqAdvance(self, j): # call function initially with j=0; recursively with the "friend" index
+    def reqAdvance(self, j): 
 
         global advanceRequests
         advanceRequests += 1
@@ -619,11 +809,11 @@ class StorageAgent:
 
 
         friend = i
-        totalRequests = abs(self.currentReqs()) # ponovno izracunavanje ukupnih zahtjeva - sada se potrosac "friend" dodaje zbroju jer mu se radno vrijeme pomaknulo unaprijed
+        totalRequests = abs(self.currentReqs()) 
         totalProduction = self.currentProduction()
 
         #if (self.currentResourceLevel + productionCapacity - totalRequests) < self.upperThreshold:
-        if (totalProduction - totalRequests) <= 0: # mozda je dovoljno da trend bude negativan ili neutralan (0), mozda i ne - pratiti simulacije
+        if (totalProduction - totalRequests) <= 0: 
             print (" ** RESOURCE LOSS PREVENTED BY ADVANCING! ** \n")
             return ("ok")
 
@@ -681,6 +871,7 @@ class StorageAgent:
 
         #self.myNeighbours = storages[:]
 
+        self.myNeighbours = []
         for r in storages:
             if r.resourceID == self.resourceID:
                 self.myNeighbours.append(r)
@@ -721,19 +912,30 @@ class StorageAgent:
            #print("\n >> Transfer costs from %s: %s" %(closestNeighbour.name, self.storageCosts))
 
            cost = self.storageCosts.get(closestNeighbour.name)
+           seller_canGive = closestNeighbour.currentResourceLevel - closestNeighbour.lowerThreshold - 1
 
-           print ("\n >> Transfer costs from %s: %s" %(closestNeighbour.name, cost))
+           print (" >> Transfer costs from %s: %s" %(closestNeighbour.name, cost))
 
-           if cost < self.acceptableCost:
-               print ("\n >> TRANSFER COST ACCEPTABLE.")
-               # priceTotal = self.initialPrice * need
-               # request_offer = [need, priceTotal]
-               # iteration = 0
-               # print("\n\n >> Iteration 1: %d" %iteration)
-               # print("\n >> Offer sent: %s" %request_offer)
-               # answer = closestNeighbour.resourceNegotiation(request_offer)
-               answer = closestNeighbour.resourceNegotiation(need)
+           if cost < self.acceptableCost and seller_canGive > 0:
+               print ("\n >> TRANSFER COST ACCEPTABLE. RESOURCES AVAILABLE. INITIATING NEGOTIATION PROCESS.")
+
+               self.buying(self.initial, closestNeighbour)
+
+               answer = self.negotiationAnswer
+
+
+               # answer = closestNeighbour.resourceNegotiation(need)
                i+=1
+
+           elif cost < self.acceptableCost and seller_canGive <= 0:
+               print ("\n >> TRANSFER COST ACCEPTABLE, BUT RESOURCES NOT AVAILABLE.")
+               print (" >> SELLER %s CRL: %f" %(closestNeighbour.name, closestNeighbour.currentResourceLevel))
+               print (" >> SELLER %s LT: %f" %(closestNeighbour.name, closestNeighbour.lowerThreshold))
+
+
+               answer = 0
+               i+=1
+
            else:
                print ("\n >> TRANSFER COST NOT ACCEPTABLE.")
                answer = 0
@@ -752,14 +954,17 @@ class StorageAgent:
 
         elif self.currentResourceLevel > 0 and self.currentResourceLevel < self.lowerThreshold and i != len(self.myNeighbours): # more than 0, less than lower threshold
           neededResources = self.lowerThreshold - self.currentResourceLevel + 1
-          print (" * Calling negotiations again ...")
+          print ("\n\n ** Calling next neighbour for negotiations ...")
           self.startNegotiation(neededResources, friend)
+
 
         elif self.currentResourceLevel >= self.lowerThreshold: # if above the lower threshold, end negotiations
           print ("\n * Negotiations successful. Exiting negotiations now.")
 
         else: # if there are still resources left, less than lower threshold, more than 0, all the neighbours contacted
-            print ("\n * Negotiations NOT successful, but there are still some resources available.")
+            print ("\n * Negotiation process insufficient.")
+            print (" * %s CRL: %f" %(self.name, self.currentResourceLevel))
+            print (" * %s LT: %d" %(self.name, self.lowerThreshold))
 
 
 
@@ -773,11 +978,15 @@ class StorageAgent:
         # counterOffer = [initial_resource_offer, priceTotal]
 
 
-        if trend >= 0 and surplus > 0 and surplus >= toGive: # ako je produkcija veca od potrosnje, ako ima viskova i ima ih vise nego trazi susjed, daj mu onoliko koliko trazi
-            self.currentResourceLevel = self.currentResourceLevel - toGive # smanji svoje kolicine za toliko koliko se daje
+        if trend >= 0 and surplus > 0 and surplus >= toGive: 
+            self.currentResourceLevel = self.currentResourceLevel - toGive 
             print ("\n * ALL wanted resources available. Transferring %s units.. have a good day!" %toGive)
             self.currentReqs()
             return toGive
+
+            '''
+
+            '''
 
         elif trend >= 0 and surplus > 0 and surplus < toGive:
             self.currentResourceLevel = self.currentResourceLevel - surplus
@@ -861,7 +1070,7 @@ class StorageAgent:
         totalRequests = self.currentReqs()
         totalProduction = self.currentProduction()
 
-        #canTake = abs(self.upperThreshold - self.currentResourceLevel - totalProduction - totalRequests - 1) # OVO SE RACUNA NA KRAJU vrem.jedinice, pa su svi requestovi i production vec ukalkulirani u CRL
+        #canTake = abs(self.upperThreshold - self.currentResourceLevel - totalProduction - totalRequests - 1) 
         canTake = abs(self.upperThreshold - self.currentResourceLevel - 1)
         print ("\n ** %s: My CRL: %f" %(self.name, self.currentResourceLevel))
         print (" ** %s: My UT value: %f" %(self.name, self.upperThreshold))
@@ -887,3 +1096,5 @@ class StorageAgent:
         else:
             print (" * Sorry, don't need it.")
             return 0
+
+observer = observerAgent()
