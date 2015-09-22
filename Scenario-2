@@ -1,11 +1,25 @@
 ############################ SCENARIO 2: SPACE COLONY ####################################
 
-# ------------------- UNIT 1 
+# NEGOTIATIONS PARAMETERS (defined by the user):
+buyerValue = [0.99,-0.01]
+buyerStrategy = [0,0.008]
+sellerValue = [-0.6,0.4]
+sellerStrategy = [1,-0.004]
+negTimerMax = 1000
+worth = 100000
 
-# storage parameters: name, crl, maxCapacity, lower threshold, upper threshold
+# RESOURCE TRANSFER COSTS (defined by the user):
+storage1Costs = {"UNIT-2" : 1, "UNIT-3" : 2, "UNIT-4" : 3}
+storage2Costs = {"UNIT-1" : 1, "UNIT-3" : 1, "UNIT-4" : 2}
+storage3Costs = {"UNIT-1" : 2, "UNIT-2" : 1, "UNIT-4" : 1}
+storage4Costs = {"UNIT-1" : 3, "UNIT-2" : 2, "UNIT-3" : 1}
+
+# ------------------- UNIT 1
+
+# storage parameters: name, crl, maxCapacity, lower threshold, upper threshold, transfer costs, acceptable transfer cost value
 # producer/consumer parameters: name, priority, capacity, workStart, workStop, belongsTo, eFactor)
 
-storage1 = StorageAgent("UNIT-1", 2000, 5000, 800, 4000)
+storage1 = StorageAgent("UNIT-1", 2000, 5000, 800, 4000, storage1Costs, 20, 1, buyerValue, buyerStrategy, sellerValue, sellerStrategy, negTimerMax, worth)
 
 P1 = [1245,1185,1275,1260,1140,1140,1125,1245,1140,1140,1275,1200,1260,1275,1125,1140,1185,1155,1125,1275,1215,1230,1230,1185,1200,1215,1230,1230,1155,1275,1140,1185,1215,1260,1215,1185,1170,1200,1230,1140,1185,1200,1275,1200,1275,1230,1260,1140,1170,1260,1260,1185]
 P1_WRS = agent ("Producer-WRS-U1", 1, P1, 1, 30, storages[0], 1)
@@ -20,7 +34,7 @@ C1_HUMAN = agent ("Consumer-HUMAN-U1", 1, C1, 1, 30, storages[0], 0.56)
 # ------------------- UNIT 2
 
 # storage parameters: name, crl, maxCapacity, lower threshold, upper threshold
-storage2 = StorageAgent("UNIT-2", 2000, 5000, 800, 4000)
+storage2 = StorageAgent("UNIT-2", 2000, 5000, 800, 4000, storage2Costs, 20, 2, buyerValue, buyerStrategy, sellerValue, sellerStrategy, negTimerMax, worth)
 
 P3 = [1215,1155,1245,1260,1275,1140,1155,1155,1125,1260,1155,1215,1260,1245,1140,1200,1155,1215,1170,1170,1230,1140,1260,1260,1230,1170,1140,1170,1155,1215,1230,1170,1200,1275,1230,1215,1170,1125,1200,1140,1155,1200,1155,1140,1125,1185,1185,1275,1275,1125,1245,1125]
 P3_WRS = agent ("Producer-WRS-U2", 1, P3, 1, 30, storages[1], 1)
@@ -35,7 +49,7 @@ C2_HUMAN = agent ("Consumer-HUMAN-U2", 1, C2, 1, 30, storages[1], 0.56)
 # ------------------- UNIT 3
 
 # storage parameters: name, crl, maxCapacity, lower threshold, upper threshold
-storage3 = StorageAgent("UNIT-3", 5000, 10000, 1000, 8000)
+storage3 = StorageAgent("UNIT-3", 5000, 10000, 1000, 8000, storage3Costs, 20, 3, buyerValue, buyerStrategy, sellerValue, sellerStrategy, negTimerMax, worth)
 
 P5 = [19170,21600,20250,22410,19170,22140,19710,21060,19440,21600,22950,20520,19170,19440,20790,21060,18900,19440,22410,21330,19440,20250,21330,18900,21060,20520,20250,19710,21870,20250,18900,19170,21330,22140,22410,21060,22950,19440,20790,22950,20790,21870,21330,22680,21600,19710,21870,21600,18900,20520,21870,21870]
 P5_WRS = agent ("Producer-WRS-U3", 1, P5, 1, 30, storages[2], 1)
@@ -50,7 +64,7 @@ C3_CROPS = agent ("Consumer-CROPS-U3", 1, C3, 1, 30, storages[2], 0.56)
 # ------------------- UNIT 4
 
 # storage parameters: name, crl, maxCapacity, lower threshold, upper threshold
-storage4 = StorageAgent("UNIT-4", 5000, 10000, 1000, 8000)
+storage4 = StorageAgent("UNIT-4", 5000, 10000, 1000, 8000, storage4Costs, 20, 4, buyerValue, buyerStrategy, sellerValue, sellerStrategy, negTimerMax, worth)
 
 P7 = [21330,21600,22140,20250,20790,19980,22140,19710,21870,20790,20790,19440,19980,19980,22410,21600,21060,21060,19440,21600,19980,21600,21060,19440,22410,19440,21330,21330,21330,22680,21330,22140,18900,21060,21060,21060,22410,21330,20520,19440,22410,22410,22410,22410,18900,20790,21600,21330,21600,21060,22140,18900]
 P7_WRS = agent ("Producer-WRS-U4", 1, P7, 1, 30, storages[3], 1)
