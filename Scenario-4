@@ -1,4 +1,4 @@
-############################ SCENARIO 3: SPACE FLIGHT ####################################
+############################ SCENARIO 4: SPACE FLIGHT ####################################
 
 # storage parameters: name, crl, maxCapacity, lower threshold, upper threshold
 # producer/consumer parameters: name, priority, capacity, workStart, workStop, belongsTo, eFactor)
