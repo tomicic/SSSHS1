@@ -200,6 +200,9 @@ NOTE: The list must have the exact number of items which corresponds to the defi
 
 4 SIMULATION
 
+After the last line of the SSSHS file, append one of the available scenarios, or your own. 
+Initiate the simulation with the startSimulation() function.
+
 At the end of simulation, SSSHS framework reports both global system, and individual storage unit's final states as follows:
 
  ******* Number of system interventions: 125
